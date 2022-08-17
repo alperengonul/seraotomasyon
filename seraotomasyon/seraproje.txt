@@ -1,0 +1,92 @@
+#include <LiquidCrystal_I2C.h>
+#include<Servo.h>
+Servo servo1;
+LiquidCrystal_I2C lcdekranim(0x27, 16, 2);
+#include <Wire.h>
+const int prob = A0;
+const int ldr_pin = 8;
+int olcum_sonucu;
+int ldrsonuc;
+#define Buton 7
+#define Buton2 6
+String meyve;
+int durum = 0; //değişken
+const int Enable_B = 10; //motor sürücüsünde ki motorun bağlandığı kısmın pininin tanımlanması
+const int Enable_A = 11; //motor sürücüsünde ki motorun bağlandığı kısmın pininin tanımlanması
+const int inputA1 = 4; // motor sürücünün giriş pininin tanımlanması
+const int inputA2 = 2; // motor sürücünün giriş pininin tanımlanması
+const int inputB1 = 5; // motor sürücünün giriş pininin tanımlanması
+const int inputB2 = 9; // motor sürücünün giriş pininin tanımlanması
+int nem = 0;
+
+void setup() {
+  pinMode(Enable_B, OUTPUT); //pine çıkış görevi veriyoruz
+  pinMode(inputB1, OUTPUT); //pine çıkış görevi veriyoruz
+  pinMode(inputB2, OUTPUT); //pine çıkış görevi veriyoruz
+  pinMode(Enable_A, OUTPUT); //pine çıkış görevi veriyoruz
+  pinMode(inputA1, OUTPUT); //pine çıkış görevi veriyoruz
+  pinMode(inputA2, OUTPUT); //pine çıkış görevi veriyoruz
+  servo1.attach(3);
+
+  pinMode(Buton, INPUT);
+  pinMode(Buton2, INPUT);
+  pinMode(ldr_pin, INPUT);
+  lcdekranim.init();
+  lcdekranim.backlight();
+  lcdekranim.setCursor(0, 0);
+  lcdekranim.print("hosgeldiniz");
+  delay(1000);
+  lcdekranim.clear();
+  Serial.begin(9600);
+  meyve = "secin";
+}
+void loop() {
+  olcum_sonucu = analogRead(prob);
+  delay(500);
+  lcdekranim.setCursor(0, 0);
+  lcdekranim.print("toprak nem:");
+  lcdekranim.print(olcum_sonucu);
+  lcdekranim.setCursor(0, 1);
+  lcdekranim.print(meyve);
+  if (digitalRead( ldr_pin) == 0 && durum == 0 ) {
+    lcdekranim.print(" isik var");
+        digitalWrite(Enable_A, HIGH); //motoru çalıştırma kodu
+    digitalWrite(inputA1 , HIGH); //motoru çalıştırma kodu
+    digitalWrite(inputA2, LOW); //motoru çalıştırma kodu
+    servo1.write(180);
+  }
+  else {
+    lcdekranim.print(" isik yok");
+    
+        servo1.write(0);
+
+  }
+  if (digitalRead(Buton) == 1) {
+    lcdekranim.setCursor(0, 1);
+    lcdekranim.clear();
+    meyve = "domates";
+    nem = 990;
+  }
+  if (digitalRead(Buton2) == 1) {
+    lcdekranim.setCursor(0, 1);
+    lcdekranim.clear();
+    meyve = "sogan";
+    nem = 200;
+
+  }
+  if (analogRead(prob) < nem && durum == 0) { //nem sensöründen gelen verinin sorgusu
+    // açık
+    digitalWrite(Enable_B, HIGH); //motoru çalıştırma kodu
+    digitalWrite(inputB1 , HIGH); //motoru çalıştırma kodu
+    digitalWrite(inputB2, LOW); //motoru çalıştırma kodu
+    durum = 1;
+    lcdekranim.setCursor(0, 1);
+    lcdekranim.print("asdadsada");
+  }
+
+  if (analogRead(prob) > nem && durum == 1) { // kapalı //nem sensöründen gelen verinin sorgusu
+    digitalWrite(Enable_B, LOW);                    // motoru durdurma kodu
+    durum = 0;
+  }
+
+}
